@@ -1,0 +1,5 @@
+#Ignore all installed dependency
+node_modules/
+
+#Ignore vscode setting
+./vscode/

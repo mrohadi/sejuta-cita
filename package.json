@@ -1,0 +1,19 @@
+{
+  "name": "sejuta_cita",
+  "version": "1.0.0",
+  "description": "SejutaCita RESTFUL API test for backend position",
+  "type": "module",
+  "main": "./src/server.js",
+  "scripts": {
+    "start": "nodemon server.js"
+  },
+  "author": "Muhammad Rohadi",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.2",
+    "mongoose": "^6.1.7"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.15"
+  }
+}
