@@ -4,8 +4,7 @@ import bcrypt from "bcryptjs";
 import authConfig from "../config/auth.config.js";
 import db from "../models/index.js";
 
-const User = db.user;
-const Role = db.role;
+const { user: User, role: Role, refreshToken: RefreshToken } = db;
 
 /**
  * Sign-up controller
@@ -75,18 +74,19 @@ const signUpController = (req, res) => {
  * @param {*} req Request body
  * @param {*} res Response
  */
-const signInController = (req, res) => {
-  User.findOne({ username: req.body.username })
+const signInController = async (req, res) => {
+  User.findOne({
+    username: req.body.username,
+  })
     .populate("roles", "-__v")
-    .exec((err, user) => {
+    .exec(async (err, user) => {
       if (err) {
         res.status(500).send({ message: err });
         return;
       }
 
       if (!user) {
-        res.status(404).send({ message: "User not found!" });
-        return;
+        return res.status(404).send({ message: "User Not found." });
       }
 
       let passwordIsValid = bcrypt.compareSync(
@@ -95,32 +95,83 @@ const signInController = (req, res) => {
       );
 
       if (!passwordIsValid) {
-        return res
-          .status(401)
-          .send({ accessToken: null, message: "Invalid Token!" });
+        return res.status(401).send({
+          accessToken: null,
+          message: "Invalid Password!",
+        });
       }
 
       let token = jwt.sign({ id: user.id }, authConfig.SECRET_KEY, {
-        expiresIn: 86400, // 24 hours
+        expiresIn: authConfig.jwtExpiration,
       });
+
+      let refreshToken = await RefreshToken.createToken(user);
 
       let authorities = [];
 
       for (let i = 0; i < user.roles.length; i++) {
-        authorities.push(`ROLE_${user.roles[i].name.toUpperCase()}`);
+        authorities.push("ROLE_" + user.roles[i].name.toUpperCase());
       }
-
       res.status(200).send({
         id: user._id,
         username: user.username,
         email: user.email,
         roles: authorities,
         accessToken: token,
+        refreshToken: refreshToken,
       });
     });
+};
+
+/**
+ *
+ * @param {} req
+ * @param {*} res
+ * @returns
+ */
+const refreshToken = async (req, res) => {
+  const { refreshToken: requestToken } = req.body;
+
+  if (requestToken === null) {
+    return res.status(403).json({ message: "Refresh Token is required!" });
+  }
+
+  try {
+    let refreshToken = await RefreshToken.findOne({ token: requestToken });
+
+    if (!refreshToken) {
+      res.status(403).json({ message: "Refresh Token is not in database!" });
+      return;
+    }
+
+    if (RefreshToken.verifyExpiration(refreshToken)) {
+      RefreshToken.findByIdAndRemove(refreshToken._id, {
+        useFindAndModify: false,
+      }).exec();
+
+      res.status(403).json({
+        message: "Refresh Token was expired! Please make a new sign in",
+      });
+      return;
+    }
+
+    let newAccessToken = jwt.sign(
+      { id: refreshToken.user._id },
+      authConfig.SECRET_KEY,
+      { expiresIn: authConfig.jwtExpiration }
+    );
+
+    return res.status(200).json({
+      accessToken: newAccessToken,
+      refreshToken: refreshToken.token,
+    });
+  } catch (err) {
+    return res.status(500).send({ message: err.message });
+  }
 };
 
 export default {
   signUpController,
   signInController,
+  refreshToken,
 };

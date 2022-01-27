@@ -6,6 +6,24 @@ import db from "../models/index.js";
 const User = db.user;
 const Role = db.role;
 
+const { TokenExpiredError } = jwt;
+
+/**
+ *
+ * @param {} err
+ * @param {*} res
+ * @returns
+ */
+const catchErrror = (err, res) => {
+  if (err instanceof TokenExpiredError) {
+    return res
+      .status(401)
+      .send({ message: "Unauthorized! Access Token was expired!" });
+  }
+
+  return res.sendStatus(401).send({ message: "Unauthorized!" });
+};
+
 /**
  * Function to verify token that send throught http header request
  * @param {*} req Request body
@@ -21,7 +39,7 @@ const verifyToken = (req, res, next) => {
 
   jwt.verify(token, authConfig.SECRET_KEY, (err, decoded) => {
     if (err) {
-      return res.status(401).send({ message: "Unauthorized!" });
+      return catchErrror(err, res);
     }
 
     req.userId = decoded.id;

@@ -1,9 +1,16 @@
+/**
+ * Author: Muhammad Rohadi
+ * Email: muhammadrohadi03@gmail.com
+ * Purpose: Sejuta Cita Backend Engineer Assessment
+ * Description: This file is intented for all of Users resources routing request
+ */
+
 import userController from "../controllers/user.controller.js";
 import jwt from "../middlewares/index.js";
 
 /**
- *
- * @param {} app
+ * Defines all of user rousources routing
+ * @param {} app Instance of express function
  */
 const userRoute = (app) => {
   app.use((req, res, next) => {

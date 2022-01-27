@@ -1,9 +1,16 @@
+/**
+ * Author: Muhammad Rohadi
+ * Email: muhammadrohadi03@gmail.com
+ * Purpose: Sejuta Cita Backend Engineer Assessment
+ * Description: This file is intented for all of Authentication related route request
+ */
+
 import authController from "../controllers/auth.controller.js";
 import verifySignUp from "../middlewares/verify.sign-up.js";
 
 /**
- * Authentication route
- * @param {} app
+ * Defines Authentication route
+ * @param {} app An instance of express function
  * @name POST: /api/auth/signup
  * @name POST: /api/auth/signin
  */
@@ -27,6 +34,8 @@ const authRoute = (app) => {
   );
 
   app.post("/api/auth/signin", authController.signInController);
+
+  app.post("/api/auth/refresh-token", authController.refreshToken);
 };
 
 export default authRoute;
