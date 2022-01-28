@@ -34,6 +34,4 @@ For admin credential you can use username = admin and password = admin. I have p
 
 In order to access the Restful API i have provide the documentation about the API. You can access the [Link](https://documenter.getpostman.com/view/11175460/UVeCPTHm) to read about the documentation. I also provide Sejuta Cita json format file and you can download the file and import it in your postman.
 
-Last but not least, I hope i could join Sejuta Cita because I really interested in about the compay, service that they are provide, ect
-
-That is so funny! :joy:
+Last but not least, I hope i could join Sejuta Cita because I really interested in about the compay, service that they are provide, ect. :blush: :blush:
