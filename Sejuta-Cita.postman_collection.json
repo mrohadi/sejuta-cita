@@ -1,0 +1,375 @@
+{
+	"info": {
+		"_postman_id": "93475215-c149-4575-a03b-9e88905bb0f7",
+		"name": "Sejuta-Cita",
+		"description": "# Introduction\n\nSejuta Cita Back-end Engineer Assessment\n\n# Overview\n\nThis assessment is intended to pass Sejuta Cita Back-end Engineer test. The requirement of the test are to build CRUD Restful API for user Authentication and Authorization to access the user resources.\n\n# Authentication\n\nOn this API I use authentication user with username and password as required by the assessment. There are 2 role for Authorization in order to access user resources. Admin role can access all of the user resources, while User role just can access the user resources related to the logged user.\n\n# Authorization\n\nToken is used to authorized the user in order to access user resources endpoint. I implement JWT token for this purpose with expiry token is set to 60 second. All of token is stored in postman global variable so you do not need to copy pass the token to access user resources\n\n# Refresh Token\n\nRefresh token also implemented on this API, but in this purpose we have to hit refresh token endpoint again.\n\n# Error Codes\n\nNoting error codes that I use for this API, I'am just send the response with isError field with boolean value to indicate if it error or not, errorDesc for the description and object data. So the response must be like this { \"isError\": boolean, \"errorDesc\": string, \"data\": {}}",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "User Resources",
+			"item": [
+				{
+					"name": "All Users",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-access-token",
+								"value": "{{accessToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/users",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"users"
+							]
+						},
+						"description": "Access all of registered user in the system, but this just can access with user admin role (login as admin)"
+					},
+					"response": []
+				},
+				{
+					"name": "User By ID",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-access-token",
+								"value": "{{accessToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/user/61f366774276df2b4f8a0eb1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"user",
+								"61f366774276df2b4f8a0eb1"
+							],
+							"query": [
+								{
+									"key": "id",
+									"value": "61f1a6ef3dbd10c2f9e8215f",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Access specific user by their ID in order to get the detail information about them. For this purpose query params is user id. Note: admin role can get all users with specific id"
+					},
+					"response": []
+				},
+				{
+					"name": "Update User",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "x-access-token",
+								"value": "{{accessToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"nabilaupdated\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/user/61f366774276df2b4f8a0eb1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"user",
+								"61f366774276df2b4f8a0eb1"
+							]
+						},
+						"description": "Update specific user with their ID in query params. Note: admin role can update all users"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete User",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "x-access-token",
+								"value": "{{accessToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/user/61f3697fdbcda3a473b33a19",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"user",
+								"61f3697fdbcda3a473b33a19"
+							]
+						},
+						"description": "Delete user with their specific ID. Note: admin role can delete all users"
+					},
+					"response": []
+				}
+			],
+			"description": "All of user resources endpoint implemented on this API, like get all user, get user by id, update user, and delete user with related Authorization"
+		},
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Sign Up",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "sd",
+								"value": "",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"adi21\",\n    \"email\": \"adi21@gmail.com\",\n    \"password\": \"adi21\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/signup",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"signup"
+							]
+						},
+						"description": "This endpoint used to sign up new user with user role, but for this assessment we have to hit sign in endpoint in order to able to access user resources endpoint"
+					},
+					"response": []
+				},
+				{
+					"name": "Sign In",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const res = pm.response.json();",
+									"",
+									"if (res.data !== undefined) {",
+									"    pm.globals.set('accessToken', res.data.accessToken);",
+									"    pm.globals.set('refreshToken', res.data.refreshToken);",
+									"",
+									"    console.log(pm.globals.get('accessToken'))",
+									"    console.log(pm.globals.get('refreshToken'))",
+									"}",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "sd",
+								"value": "",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"admin\",\n    \"password\": \"admin\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/signin",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"signin"
+							]
+						},
+						"description": "This endpoint is used to sign in and get access token in order to able to access user resources"
+					},
+					"response": []
+				},
+				{
+					"name": "Refresh Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const res = pm.response.json();",
+									"",
+									"if (res.data !== undefined) {",
+									"    pm.globals.set('accessToken', res.data.accessToken);",
+									"    pm.globals.set('refreshToken', res.data.refreshToken);",
+									"",
+									"    console.log(pm.globals.get('accessToken'))",
+									"    console.log(pm.globals.get('refreshToken'))",
+									"}",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "sd",
+								"value": "",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"refreshToken\": \"{{refreshToken}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/refresh-token",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"refresh-token"
+							]
+						},
+						"description": "Refresh token is used to refresh token. For this assessment i implement it in this way"
+					},
+					"response": []
+				}
+			],
+			"description": "There are 3 endpoint on this section, Sign up, Sign In, and Refresh token",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"const user = pm.response.json();",
+							"",
+							"pm.test(\"Has properties\", function () {",
+							"    pm.expect(user).to.have.property('username');",
+							"    pm.expect(user).to.have.property('token');",
+							"});",
+							"",
+							"if (pm.test(\"Has properties\")) {",
+							"    pm.globals.set('token', user.token);",
+							"}"
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "Init",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}",
+					"host": [
+						"{{base_url}}"
+					]
+				},
+				"description": "Starting point"
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8082",
+			"type": "string"
+		},
+		{
+			"value": "",
+			"type": "string"
+		}
+	]
+}
