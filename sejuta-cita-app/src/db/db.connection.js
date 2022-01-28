@@ -24,13 +24,10 @@ class DBConnection {
 
   _connect() {
     db.mongoose
-      .connect(
-        `mongodb://${dbConfig.USERNAME}:${dbConfig.PASSWORD}@${dbConfig.HOST}:${dbConfig.PORT}/${dbConfig.DB}?authSource=admin`,
-        {
-          useNewUrlParser: true,
-          useUnifiedTopology: true,
-        }
-      )
+      .connect(dbConfig.url, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+      })
       .then(() => {
         console.log("Database connection successfull!");
         this.initialRoles();

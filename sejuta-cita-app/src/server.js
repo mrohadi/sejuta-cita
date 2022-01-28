@@ -7,14 +7,18 @@
 
 import express from "express";
 import cors from "cors";
+import dotenv from "dotenv";
 
-import dbConfig from "./config/db.config.js";
+// import dbConfig from "./config/db.config.js";
 import db from "./models/index.js";
 import DBConnection from "./db/db.connection.js";
 import authRoute from "./routes/auth.routes.js";
 import userRoute from "./routes/user.routes.js";
 
 const app = express();
+
+// Load .env file
+dotenv.config();
 
 var corsOptions = {
   origin: "http://localhost:8082",
@@ -41,7 +45,7 @@ authRoute(app);
 userRoute(app);
 
 // Set port, and listen for the requests
-const PORT = process.env.PORT || 8089;
+const PORT = process.env.NODE_DOCKER_PORT || 8089;
 app.listen(PORT, () => {
   console.log(`Server running on port: http://localhost:${PORT}`);
 });
