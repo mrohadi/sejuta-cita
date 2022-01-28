@@ -22,18 +22,28 @@ const userRoute = (app) => {
     next();
   });
 
-  app.get("/api/test/all", userController.allAccess);
-
   app.get(
-    "/api/test/user",
-    [jwt.authJwt.verifyToken],
-    userController.userBoard
+    "/api/users",
+    [jwt.authJwt.verifyToken, jwt.authJwt.isAdmin],
+    userController.getAllUsers
   );
 
   app.get(
-    "/api/test/admin",
-    [jwt.authJwt.verifyToken, jwt.authJwt.isAdmin],
-    userController.adminBoard
+    "/api/user/:userId",
+    [jwt.authJwt.verifyToken],
+    userController.getUserById
+  );
+
+  app.put(
+    "/api/user/:userId",
+    [jwt.authJwt.verifyToken, jwt.authJwt.isAdminOrUser],
+    userController.updateUser
+  );
+
+  app.delete(
+    "/api/user/:userId",
+    [jwt.authJwt.verifyToken, jwt.authJwt.isAdminOrUser],
+    userController.deleteUser
   );
 };
 

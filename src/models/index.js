@@ -1,5 +1,8 @@
 /**
- *
+ * Author: Muhammad Rohadi
+ * Email: muhammadrohadi03@gmail.com
+ * Purpose: Sejuta Cita Backend Engineer Assessment
+ * Description: Starting point for every model
  */
 
 import mongoose from "mongoose";

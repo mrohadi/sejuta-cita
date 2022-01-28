@@ -1,7 +1,15 @@
+/**
+ * Author: Muhammad Rohadi
+ * Email: muhammadrohadi03@gmail.com
+ * Purpose: Sejuta Cita Backend Engineer Assessment
+ * Description: Implement authentication middleware
+ */
+
 import jwt from "jsonwebtoken";
 
 import authConfig from "../config/auth.config.js";
 import db from "../models/index.js";
+import responseObj from "../utils/response.js";
 
 const User = db.user;
 const Role = db.role;
@@ -15,13 +23,21 @@ const { TokenExpiredError } = jwt;
  * @returns
  */
 const catchErrror = (err, res) => {
+  const resObj = Object.create(responseObj);
+
   if (err instanceof TokenExpiredError) {
-    return res
-      .status(401)
-      .send({ message: "Unauthorized! Access Token was expired!" });
+    resObj.isError = true;
+    resObj.errorDesc = err.message;
+    resObj.data = { message: "Unauthorized! Access Token was expired!" };
+
+    return res.status(401).send(resObj);
   }
 
-  return res.sendStatus(401).send({ message: "Unauthorized!" });
+  resObj.isError = true;
+  resObj.errorDesc = err.message;
+  resObj.data = {};
+
+  return res.status(401).send(resObj);
 };
 
 /**
@@ -34,7 +50,13 @@ const verifyToken = (req, res, next) => {
   let token = req.headers["x-access-token"];
 
   if (!token) {
-    return res.status(403).send({ message: "No token porvided!" });
+    const resObj = Object.create(responseObj);
+    resObj.isError = true;
+    resObj.errorDesc = "No token porvided!";
+    resObj.data = {};
+
+    res.status(403).send(resObj);
+    return;
   }
 
   jwt.verify(token, authConfig.SECRET_KEY, (err, decoded) => {
@@ -55,8 +77,14 @@ const verifyToken = (req, res, next) => {
  */
 const isAdmin = (req, res, next) => {
   User.findById(req.userId).exec((err, user) => {
+    const resObj = Object.create(responseObj);
+
     if (err) {
-      res.status(500).send({ message: err });
+      resObj.isError = true;
+      resObj.errorDesc = err.message;
+      resObj.data = {};
+
+      res.status(500).send(resObj);
       return;
     }
 
@@ -66,7 +94,11 @@ const isAdmin = (req, res, next) => {
       },
       (err, roles) => {
         if (err) {
-          res.status(500).send({ message: err });
+          resObj.isError = true;
+          resObj.errorDesc = err.message;
+          resObj.data = {};
+
+          res.status(500).send(resObj);
           return;
         }
 
@@ -77,14 +109,66 @@ const isAdmin = (req, res, next) => {
           }
         }
 
-        res.status(403).send({ message: "Required Admin Role!" });
+        resObj.isError = true;
+        resObj.errorDesc = "Required Admin Role!";
+        resObj.data = {};
+
+        res.status(403).send(resObj);
         return;
       }
     );
   });
 };
 
+const isAdminOrUser = (req, res, next) => {
+  const resObj = Object.create(responseObj);
+
+  User.findById(req.params.userId)
+    .populate("roles", "-__v")
+    .exec(async (err, user) => {
+      if (err) {
+        resObj.isError = true;
+        resObj.errorDesc = err.message;
+        data = {};
+
+        res.status(500).send(resObj);
+        return;
+      }
+
+      User.findById(req.userId)
+        .populate("roles", "-__v")
+        .exec(async (err, userLoggedIn) => {
+          if (err) {
+            resObj.isError = true;
+            resObj.errorDesc = err.message;
+            resObj.data = {};
+
+            res.status(500).send(resObj);
+            return;
+          }
+
+          if (userLoggedIn.roles.length === 1) {
+            if (req.params.userId === req.userId) {
+              next();
+              return;
+            }
+
+            resObj.isError = true;
+            resObj.errorDesc = "You Need To Be Admin To Do This Action!";
+            resObj.data = {};
+
+            res.status(403).send(resObj);
+            return;
+          }
+
+          next();
+          return;
+        });
+    });
+};
+
 export default {
   verifyToken,
   isAdmin,
+  isAdminOrUser,
 };

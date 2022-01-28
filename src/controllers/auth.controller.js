@@ -1,8 +1,16 @@
+/**
+ * Author: Muhammad Rohadi
+ * Email: muhammadrohadi03@gmail.com
+ * Purpose: Sejuta Cita Backend Engineer Assessment
+ * Description: Implement all of logic about authentication
+ */
+
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 
 import authConfig from "../config/auth.config.js";
 import db from "../models/index.js";
+import responseObj from "../utils/response.js";
 
 const { user: User, role: Role, refreshToken: RefreshToken } = db;
 
@@ -18,9 +26,15 @@ const signUpController = (req, res) => {
     email: req.body.email,
   });
 
+  const resObj = Object.create(responseObj);
+
   user.save((err, user) => {
     if (err) {
-      res.status(500).send({ message: err });
+      resObj.isError = true;
+      resObj.errorDesc = err.message;
+      resObj.data = {};
+
+      res.status(500).send(resObj);
       return;
     }
 
@@ -31,38 +45,60 @@ const signUpController = (req, res) => {
         },
         (err, roles) => {
           if (err) {
-            res.status(500).send({ message: err });
+            resObj.isError = true;
+            resObj.errorDesc = err.message;
+            resObj.data = {};
+
+            res.status(500).send(resObj);
             return;
           }
 
           user.roles = roles.map((role) => role._id);
           user.save((err) => {
             if (err) {
-              res.status(500).send({ message: err });
+              resObj.isError = true;
+              resObj.errorDesc = err.message;
+              resObj.data = {};
+
+              res.status(500).send(resObj);
               return;
             }
 
-            res
-              .status(400)
-              .send({ message: "User was registered successfully!" });
+            resObj.isError = true;
+            resObj.errorDesc = "User was registered successfully!";
+            resObj.data = {};
+
+            res.status(400).send(resObj);
           });
         }
       );
     } else {
       Role.findOne({ name: "user" }, (err, roles) => {
         if (err) {
-          res.status(500).send({ message: err });
+          resObj.isError = true;
+          resObj.errorDesc = err.message;
+          resObj.data = {};
+
+          res.status(500).send(resObj);
           return;
         }
 
         user.roles = [roles._id];
         user.save((err) => {
           if (err) {
-            res.status(500).send({ message: err });
+            resObj.isError = true;
+            resObj.errorDesc = err.message;
+            resObj.data = {};
+
+            res.status(500).send(resObj);
             return;
           }
 
-          res.send({ message: "User was registered succussfully!" });
+          resObj.isError = false;
+          resObj.errorDesc = null;
+          resObj.data = { message: "User was registered succussfully!" };
+
+          res.send(resObj);
         });
       });
     }
@@ -80,13 +116,21 @@ const signInController = async (req, res) => {
   })
     .populate("roles", "-__v")
     .exec(async (err, user) => {
+      const resObj = Object.create(responseObj);
+
       if (err) {
-        res.status(500).send({ message: err });
+        resObj.isError = true;
+        resObj.errorDesc = err.message;
+
+        res.status(500).send(resObj);
         return;
       }
 
       if (!user) {
-        return res.status(404).send({ message: "User Not found." });
+        resObj.isError = true;
+        resObj.errorDesc = "User Not Found!";
+
+        return res.status(404).send(resObj);
       }
 
       let passwordIsValid = bcrypt.compareSync(
@@ -95,10 +139,10 @@ const signInController = async (req, res) => {
       );
 
       if (!passwordIsValid) {
-        return res.status(401).send({
-          accessToken: null,
-          message: "Invalid Password!",
-        });
+        resObj.isError = true;
+        resObj.errorDesc = "Invalid Password!";
+
+        return res.status(401).send(resObj);
       }
 
       let token = jwt.sign({ id: user.id }, authConfig.SECRET_KEY, {
@@ -112,14 +156,19 @@ const signInController = async (req, res) => {
       for (let i = 0; i < user.roles.length; i++) {
         authorities.push("ROLE_" + user.roles[i].name.toUpperCase());
       }
-      res.status(200).send({
+
+      resObj.isError = false;
+      resObj.errorDesc = null;
+      resObj.data = {
         id: user._id,
         username: user.username,
         email: user.email,
         roles: authorities,
         accessToken: token,
         refreshToken: refreshToken,
-      });
+      };
+
+      responseObj.data = res.status(200).send(resObj);
     });
 };
 
@@ -131,16 +180,23 @@ const signInController = async (req, res) => {
  */
 const refreshToken = async (req, res) => {
   const { refreshToken: requestToken } = req.body;
+  const resObj = Object.create(responseObj);
 
   if (requestToken === null) {
-    return res.status(403).json({ message: "Refresh Token is required!" });
+    resObj.isError = true;
+    resObj.errorDesc = "Refresh Token is required!";
+
+    return res.status(403).json(resObj);
   }
 
   try {
     let refreshToken = await RefreshToken.findOne({ token: requestToken });
 
     if (!refreshToken) {
-      res.status(403).json({ message: "Refresh Token is not in database!" });
+      resObj.isError = true;
+      resObj.errorDesc = "Refresh Token is not in database!";
+
+      res.status(403).json(resObj);
       return;
     }
 
@@ -149,9 +205,11 @@ const refreshToken = async (req, res) => {
         useFindAndModify: false,
       }).exec();
 
-      res.status(403).json({
-        message: "Refresh Token was expired! Please make a new sign in",
-      });
+      resObj.isError = true;
+      resObj.errorDesc =
+        "Refresh Token was expired! Please make a new sign in!";
+
+      res.status(403).json(resObj);
       return;
     }
 
@@ -161,12 +219,19 @@ const refreshToken = async (req, res) => {
       { expiresIn: authConfig.jwtExpiration }
     );
 
-    return res.status(200).json({
+    resObj.isError = false;
+    resObj.errorDesc = null;
+    resObj.data = {
       accessToken: newAccessToken,
       refreshToken: refreshToken.token,
-    });
+    };
+
+    return res.status(200).json(resObj);
   } catch (err) {
-    return res.status(500).send({ message: err.message });
+    resObj.isError = true;
+    resObj.errorDesc = err.message;
+
+    return res.status(500).send(resObj);
   }
 };
 
